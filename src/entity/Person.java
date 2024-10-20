@@ -18,11 +18,9 @@ public class Person {
 
     @Override
     public String toString() {
-        return "Person{" +
-                "name='" + name + '\'' +
-                ", gender='" + gender + '\'' +
-                ", age=" + age +
-                '}';
+        return "姓名='" + name + '\'' +
+                ", 性别='" + gender + '\'' +
+                ", 年龄=" + age;
     }
 
     //getter and setter

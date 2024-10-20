@@ -5,48 +5,50 @@ package entity;
 *
 * */
 
+import java.util.ArrayList;
+import java.util.HashMap;
+
 public class Student extends Person {
 
     private String Student_id;  // 学号
-    private String major;       // 专业
     private String grade;       // 年级
-    private String class_id;    // 班级
 
+    private ArrayList<Course> courses; // 所选课程列表
+    private ArrayList<CourseClass> courseClasses; // 所选教学班列表
+    private HashMap<Course,CourseClass> courseClassHashMap; // 课程对应教学班
+    private HashMap<Course,CourseScore> courseScores; // 所有课程成绩
 
+    private Integer totalScore=0;
     //构造函数
-    public Student(String name, String gender, Integer age, String student_id, String major, String grade, String class_id) {
+
+    public Student(String name, String gender, Integer age, String student_id, String grade) {
         super(name, gender, age);
         Student_id = student_id;
-        this.major = major;
         this.grade = grade;
-        this.class_id = class_id;
+        this.courses = new ArrayList<>();
+        this.courseClasses = new ArrayList<>();
+        this.courseClassHashMap = new HashMap<>();
+        this.courseScores = new HashMap<>();
     }
 
     @Override
     public String toString() {
-        return "Student{" +
-                "Student_id='" + Student_id + '\'' +
-                ", major='" + major + '\'' +
-                ", grade='" + grade + '\'' +
-                ", class_id='" + class_id + '\'' +
-                '}';
+        return "{" +
+                "学号='" + Student_id + '\'' +
+                ", 年级='" + grade + '\'' +
+                ','+super.toString() +
+                "}\n";
     }
 
     //getter and setter
+
+
     public String getStudent_id() {
         return Student_id;
     }
 
     public void setStudent_id(String student_id) {
         Student_id = student_id;
-    }
-
-    public String getMajor() {
-        return major;
-    }
-
-    public void setMajor(String major) {
-        this.major = major;
     }
 
     public String getGrade() {
@@ -57,11 +59,43 @@ public class Student extends Person {
         this.grade = grade;
     }
 
-    public String getClass_id() {
-        return class_id;
+    public ArrayList<Course> getCourses() {
+        return courses;
     }
 
-    public void setClass_id(String class_id) {
-        this.class_id = class_id;
+    public void setCourses(ArrayList<Course> courses) {
+        this.courses = courses;
+    }
+
+    public ArrayList<CourseClass> getCourseClasses() {
+        return courseClasses;
+    }
+
+    public void setCourseClasses(ArrayList<CourseClass> courseClasses) {
+        this.courseClasses = courseClasses;
+    }
+
+    public HashMap<Course, CourseClass> getCourseClassHashMap() {
+        return courseClassHashMap;
+    }
+
+    public void setCourseClassHashMap(HashMap<Course, CourseClass> courseClassHashMap) {
+        this.courseClassHashMap = courseClassHashMap;
+    }
+
+    public HashMap<Course, CourseScore> getCourseScores() {
+        return courseScores;
+    }
+
+    public void setCourseScores(HashMap<Course, CourseScore> courseScores) {
+        this.courseScores = courseScores;
+    }
+
+    public Integer getTotalScore() {
+        return totalScore;
+    }
+
+    public void setTotalScore(Integer totalScore) {
+        this.totalScore = totalScore;
     }
 }

@@ -12,9 +12,10 @@ public class Teacher extends Person {
 
     @Override
     public String toString() {
-        return "Teacher{" +
-                "teacher_id='" + teacher_id + '\'' +
-                '}';
+        return "{" +
+                "教师编号='" + teacher_id + '\'' +
+                ','+super.toString() +
+                "}\n";
     }
 
     public String getTeacher_id() {
