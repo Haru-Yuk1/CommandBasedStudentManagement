@@ -17,6 +17,7 @@ public class CourseClass {
         this.teacher = teacher;
         this.course = course;
         this.students=new ArrayList<>();
+        this.student_num=0;
     }
 
     @Override

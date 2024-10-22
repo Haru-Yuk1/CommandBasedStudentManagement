@@ -43,8 +43,16 @@ public class GradeManager {
                 LocalDate experimentDate = LocalDate.of(year, month + 2, random.nextInt(30) + 1);
                 LocalDate finalDate = LocalDate.of(year, month + 3, random.nextInt(30) + 1);
 
+//                int regularScore = (int) (regularGrade * course.getRegularScoreWeight());
+//                int midtermScore = (int) (midtermGrade * course.getMidtermScoreWeight());
+//                int experimentScore = (int) (experimentGrade * course.getExperimentScoreWeight());
+//                int finalScore = (int) (finalGrade * course.getFinalScoreWeight());
+//                int totalScore = regularScore + midtermScore + experimentScore + finalScore;
+
                 int totalScore = (int) (regularGrade * course.getRegularScoreWeight() + midtermGrade * course.getMidtermScoreWeight()
                         + experimentGrade * course.getExperimentScoreWeight() + finalGrade * course.getFinalScoreWeight());
+
+
                 CourseScore courseScore = new CourseScore(regularGrade, regularDate, midtermGrade, midtermDate,
                         experimentGrade, experimentDate, finalGrade, finalDate, totalScore);
 
@@ -52,13 +60,13 @@ public class GradeManager {
             }
         }
         System.out.println("成绩初始化完成");
-        for (Student student : students) {
-            System.out.println("学生"+student.getStudent_id() + "," + student.getName() + "的成绩如下:" );
-            for (Course course : student.getCourses()) {
-                System.out.println("'"+course.getCourse_name() + "'：" + student.getCourseScores().get(course));
-            }
-
-        }
+//        for (Student student : students) {
+//            System.out.println("学生"+student.getStudent_id() + "," + student.getName() + "的成绩如下:" );
+//            for (Course course : student.getCourses()) {
+//                System.out.println("'"+course.getCourse_name() + "'：" + student.getCourseScores().get(course));
+//            }
+//
+//        }
         pressEnterToContinue();
     }
     // 统计一个学生各科的总成绩
@@ -75,10 +83,25 @@ public class GradeManager {
             student.setTotalScore(total);
         }
         System.out.println("学生各科总成绩统计完成");
+//        for (Student student:students){
+//            System.out.println("学生"+student.getStudent_id()+"各科总成绩为："+student.getTotalScore());
+//        }
+        pressEnterToContinue();
+    }
+    public static void queryScores(){
+        ArrayList<Student> students=DataManager.getStudents();
+        System.out.println("查询学生成绩");
+        System.out.println("-------------------------------");
+        System.out.println("所有学生成绩如下：");
         for (Student student:students){
-            System.out.println("学生"+student.getStudent_id()+"各科总成绩为："+student.getTotalScore());
+            System.out.println("学生"+student.getStudent_id()+","+student.getName()+"的成绩如下：");
+            for (Course course:student.getCourses()){
+                System.out.println("课程"+course.getCourse_name()+":"+student.getCourseScores().get(course));
+            }
+            System.out.println("总成绩为："+student.getTotalScore());
         }
         pressEnterToContinue();
+
     }
     //查询一个教学班上的学生成绩
     public static void queryScoreByCourseClass_id() {
@@ -239,5 +262,7 @@ public class GradeManager {
                 return;
             }
         }
+        System.out.println("未找到该学生");
+        pressEnterToContinue();
     }
 }

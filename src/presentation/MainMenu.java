@@ -3,7 +3,10 @@ package presentation;
 
 import dao.impl.DataManager;
 import dao.impl.InitializeData;
+import entity.Course;
+import entity.Student;
 
+import java.util.ArrayList;
 import java.util.InputMismatchException;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
@@ -11,19 +14,18 @@ import java.util.concurrent.TimeUnit;
 
 import static dao.impl.InitializeData.*;
 
-import static service.impl.CourseClassManager.queryCourseClassInfo;
-
+import static service.impl.CourseClassManager.*;
 import static service.impl.CourseManager.*;
 import static service.impl.GradeManager.*;
 import static service.impl.StudentManager.*;
 import static service.impl.TeacherManager.*;
 import static utils.CommandLineFont.*;
+import static utils.SimpleUtils.pressEnterToContinue;
 
 public class MainMenu extends DataManager {
 
     public static void show() {
         welcome();
-        showTitle();
         showMainMenu();
     }
 
@@ -74,14 +76,15 @@ public class MainMenu extends DataManager {
 
 
         while (true) {
-
+            showTitle();
             System.out.println("主菜单");
             System.out.println("-------------------------------");
             System.out.println("\t\t1. 数据初始化");
-            System.out.println("\t\t2. 获得各项成绩");
-            System.out.println("\t\t3. 数据查询");
-            System.out.println("\t\t4. 数据管理");
-            System.out.println("\t\t5. 退出系统");
+            System.out.println("\t\t2. 学生选课模拟");
+            System.out.println("\t\t3. 生成成绩");
+            System.out.println("\t\t4. 数据查询");
+            System.out.println("\t\t5. 数据管理");
+            System.out.println("\t\t6. 退出系统");
             System.out.println("-------------------------------");
             System.out.println("请选择您要进行的操作：(请输入对应数字)");
 
@@ -99,19 +102,19 @@ public class MainMenu extends DataManager {
                 case 1:
                     showInitDataMenu();
                     break;
-//                case 2:
-//                    showStudentChooseCourseMenu();
-//                    break;
                 case 2:
-                    showGetGradeMenu();
+                    showStudentChooseCourseMenu();
                     break;
                 case 3:
-                    showDataQueryMenu();
+                    showGetGradeMenu();
                     break;
                 case 4:
-                    showDataManagerMenu();
+                    showDataQueryMenu();
                     break;
                 case 5:
+                    showDataManagerMenu();
+                    break;
+                case 6:
                     showExitSystem();
                     System.exit(0);
                     break;
@@ -120,6 +123,49 @@ public class MainMenu extends DataManager {
                     break;
             }
         }
+    }
+
+    private static void showStudentChooseCourseMenu() {
+        while (true) {
+            // 清空控制台
+            System.out.println(new String(new char[50]).replace("\0", "\r\n"));
+            showTitle();
+            System.out.println("学生选课模拟");
+            System.out.println("-------------------------------");
+            System.out.println("\t\t1. 随机分配学生选课");
+            System.out.println("\t\t2. 查询学生选课信息");
+            System.out.println("\t\t3. 返回上级目录");
+            System.out.println("-------------------------------");
+            System.out.println("请选择您要进行的操作：");
+
+            Scanner scanner = new Scanner(System.in);
+            int choice = 0;
+            try {
+                choice = scanner.nextInt();
+            } catch (InputMismatchException e) {
+                System.out.println("请输入一个有效的整数！");
+                scanner.next(); // 清除错误输入
+            }
+
+            switch (choice) {
+                case 1:
+                    randomChooseCourse();
+                    break;
+                case 2:
+                    queryStudentClassInfo();
+                    break;
+                case 3:
+                    System.out.println("返回上级目录");
+                    return;
+
+                default:
+                    System.out.println("请输入一个有效的选项！");
+                    break;
+            }
+        }
+
+
+
     }
 
     // 显示数据初始化菜单
@@ -175,24 +221,16 @@ public class MainMenu extends DataManager {
                 case 5:
                     System.out.println("-------------------------------");
                     System.out.println("生成以上数据（一键生成）");
-                    if (!students.isEmpty() || !teachers.isEmpty() || !courses.isEmpty() || !courseClasses.isEmpty()) {
-                        System.out.println("信息已经初始化，是否重新初始化？（Y/N）");
-                        String input = scanner.next();
+                    InitializeData.InitDataDefault();
+//                    createStudents(students, 150);
+//                    createTeachers(teachers, 10);
+//                    createCourses(courses, 10);
+//
+//                    studentChooseCourse(students,courses);
+//                    addCourseTeacher(courses, teachers);
+//                    createCourseClass(courseClasses, courses);
 
-                        if (input.equalsIgnoreCase("N")) {
-                            return;
-                        }
-                        if (input.equalsIgnoreCase("Y")) {
-                            students.clear();
-                            teachers.clear();
-                            courses.clear();
-                            courseClasses.clear();
-                        }
-                    }
-                    createStudents(students, 150);
-                    createTeachers(teachers, 10);
-                    createCourses(courses, 10);
-                    InitializeData.InitCourseClassData(DataManager.getCourseClasses());
+//                    InitializeData.InitCourseClassData(courseClasses);
                     break;
                 case 6:
                     System.out.println("返回上级目录");
@@ -212,11 +250,12 @@ public class MainMenu extends DataManager {
             // 清空控制台
             System.out.println(new String(new char[50]).replace("\0", "\r\n"));
             showTitle();
-            System.out.println("获得成绩");
+            System.out.println("生成成绩");
             System.out.println("-------------------------------");
             System.out.println("\t\t1. 获得各项成绩");
             System.out.println("\t\t2. 获得学生总成绩");
-            System.out.println("\t\t3. 返回上级目录");
+            System.out.println("\t\t3. 查询学生成绩");
+            System.out.println("\t\t4. 返回上级目录");
             System.out.println("-------------------------------");
             System.out.println("请选择您要进行的操作：");
 
@@ -237,6 +276,9 @@ public class MainMenu extends DataManager {
                     countTotalScore();
                     break;
                 case 3:
+                    queryScores();
+                    break;
+                case 4:
                     System.out.println("返回上级目录");
                     return;
 
@@ -440,14 +482,14 @@ public class MainMenu extends DataManager {
             // 清空控制台
             System.out.println(new String(new char[50]).replace("\0", "\r\n"));
             showTitle();
-            System.out.println("数据管理");
+            System.out.println("数据管理（只涉及每个类自身数据）");
             System.out.println("-------------------------------");
             System.out.println("\t\t1. 学生管理");
             System.out.println("\t\t2. 教师管理");
             System.out.println("\t\t3. 课程管理");
             System.out.println("\t\t4. 教学班管理");
-            System.out.println("\t\t5. 成绩管理");
-            System.out.println("\t\t6. 返回上级目录");
+//            System.out.println("\t\t5. 成绩管理");
+            System.out.println("\t\t5. 返回上级目录");
             System.out.println("-------------------------------");
             System.out.println("请选择您要进行的操作：");
 
@@ -473,10 +515,10 @@ public class MainMenu extends DataManager {
                 case 4:
                     showClassManagerMenu();
                     break;
+//                case 5:
+//                    showGradeManagerMenu();
+//                    break;
                 case 5:
-                    showGradeManagerMenu();
-                    break;
-                case 6:
                     System.out.println("返回上级目录");
                     return;
                 default:
@@ -491,7 +533,7 @@ public class MainMenu extends DataManager {
             // 清空控制台
             System.out.println(new String(new char[50]).replace("\0", "\r\n"));
             showTitle();
-            System.out.println("学生信息查询");
+            System.out.println("学生信息管理");
             System.out.println("-------------------------------");
             System.out.println("\t\t1. 添加学生");
             System.out.println("\t\t2. 删除学生");
@@ -614,10 +656,10 @@ public class MainMenu extends DataManager {
                     deleteCourses();
                     break;
                 case 3:
-
+                    updateCourse();
                     break;
                 case 4:
-                    System.out.println("查询课程信息");
+                    queryCourseInfo();
                     break;
                 case 5:
                     System.out.println("返回上级目录");
@@ -657,16 +699,16 @@ public class MainMenu extends DataManager {
 
             switch (choice) {
                 case 1:
-                    System.out.println("添加教学班");
+                    addCourseClasses();
                     break;
                 case 2:
-                    System.out.println("删除教学班");
+                    deleteCourseClasses();
                     break;
                 case 3:
-                    System.out.println("修改教学班信息");
+                    updateCourseClass();
                     break;
                 case 4:
-                    System.out.println("查询教学班信息");
+                    queryCourseClassInfo();
                     break;
                 case 5:
                     System.out.println("返回上级目录");
@@ -678,51 +720,51 @@ public class MainMenu extends DataManager {
         }
     }
 
-    //成绩管理
-    public static void showGradeManagerMenu() {
-        while (true) {
-            // 清空控制台
-            System.out.println(new String(new char[50]).replace("\0", "\r\n"));
-            showTitle();
-
-            System.out.println("成绩管理");
-            System.out.println("-------------------------------");
-            System.out.println("\t\t1. 录入成绩");
-            System.out.println("\t\t2. 修改成绩");
-            System.out.println("\t\t3. 查询成绩");
-            System.out.println("\t\t4. 返回上级目录");
-            System.out.println("\t\t5. 退出系统");
-            System.out.println("-------------------------------");
-            System.out.println("请选择您要进行的操作：");
-
-            Scanner scanner = new Scanner(System.in);
-            int choice = 0;
-            try {
-                choice = scanner.nextInt();
-            } catch (InputMismatchException e) {
-                System.out.println("请输入一个有效的整数！");
-                scanner.next(); // 清除错误输入
-            }
-
-            switch (choice) {
-                case 1:
-                    System.out.println("录入成绩");
-                    break;
-                case 2:
-                    System.out.println("修改成绩");
-                    break;
-                case 3:
-                    System.out.println("查询成绩");
-                    break;
-                case 4:
-                    System.out.println("返回上级目录");
-                    return;
-                default:
-                    System.out.println("请输入一个有效的选项！");
-                    break;
-            }
-        }
-    }
+//    //成绩管理
+//    public static void showGradeManagerMenu() {
+//        while (true) {
+//            // 清空控制台
+//            System.out.println(new String(new char[50]).replace("\0", "\r\n"));
+//            showTitle();
+//
+//            System.out.println("成绩管理");
+//            System.out.println("-------------------------------");
+//            System.out.println("\t\t1. 录入成绩");
+//            System.out.println("\t\t2. 修改成绩");
+//            System.out.println("\t\t3. 查询成绩");
+//            System.out.println("\t\t4. 返回上级目录");
+//            System.out.println("\t\t5. 退出系统");
+//            System.out.println("-------------------------------");
+//            System.out.println("请选择您要进行的操作：");
+//
+//            Scanner scanner = new Scanner(System.in);
+//            int choice = 0;
+//            try {
+//                choice = scanner.nextInt();
+//            } catch (InputMismatchException e) {
+//                System.out.println("请输入一个有效的整数！");
+//                scanner.next(); // 清除错误输入
+//            }
+//
+//            switch (choice) {
+//                case 1:
+//                    System.out.println("录入成绩");
+//                    break;
+//                case 2:
+//                    System.out.println("修改成绩");
+//                    break;
+//                case 3:
+//                    System.out.println("查询成绩");
+//                    break;
+//                case 4:
+//                    System.out.println("返回上级目录");
+//                    return;
+//                default:
+//                    System.out.println("请输入一个有效的选项！");
+//                    break;
+//            }
+//        }
+//    }
 
     //退出系统
     public static void showExitSystem() {

@@ -1,6 +1,7 @@
 package service.impl;
 
 import dao.impl.DataManager;
+import entity.CourseClass;
 import entity.Student;
 import entity.Teacher;
 
@@ -51,10 +52,23 @@ public class TeacherManager {
         for (Teacher teacher : teachers) {
             if (teacher.getTeacher_id().equals(id)) {
                 teachers.remove(teacher);
+                //处理其他相关信息的数据
+                ArrayList<CourseClass> courseClasses = DataManager.getCourseClasses();
+                for (CourseClass courseClass : courseClasses) {
+                    if(courseClass.getTeacher().getTeacher_id().equals(id)){
+                        courseClasses.remove(courseClass);
+                        courseClass.getCourse().getTeachers().remove(courseClass.getTeacher());
+                    }
+                }
+
                 System.out.println("删除成功");
+                System.out.println("删除的教师："+teacher);
+                pressEnterToContinue();
                 return;
             }
         }
+        pressEnterToContinue();
+
     }
     public static void updateTeacher(){
         System.out.println("请输入要修改的教师编号：");
@@ -74,9 +88,13 @@ public class TeacherManager {
                 teacher1.setGender(gender);
                 teacher1.setAge(age);
                 System.out.println("修改成功");
+                System.out.println("修改后的教师信息："+teacher1);
+                pressEnterToContinue();
                 return;
             }
         }
+        System.out.println("未找到该教师，请检查输入是否正确。");
+        pressEnterToContinue();
     }
 
 }

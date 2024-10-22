@@ -10,7 +10,7 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static java.lang.Math.max;
+import static java.lang.Math.*;
 import static utils.CourseInfo.COURSES;
 import static utils.CourseInfo.SEMESTERS;
 import static utils.PersonName.*;
@@ -22,23 +22,36 @@ public class InitializeData {
 
     public static void createStudents(ArrayList<Student> students, int studentNum) {
         System.out.println("开始初始化学生信息...");
+        Set<String> existingIds = new HashSet<>();
         for (int i = 0; i < studentNum; i++) {
             String gender = setGender();
             String name = setName(gender);
             Integer age = random.nextInt(10) + 18;  // 年龄范围 18-27
             String grade = setGrade();
             // 将 i 格式化为四位定长的字符串作为学生的 ID
-            String studentId = "";
-            if (grade.equals("大一")) {
-                studentId = "2024" + String.format("%04d", random.nextInt(studentNum) + 1);
-            } else if (grade.equals("大二")) {
-                studentId = "2023" + String.format("%04d", random.nextInt(studentNum) + 1);
-            } else if (grade.equals("大三")) {
-                studentId = "2022" + String.format("%04d", random.nextInt(studentNum) + 1);
-            } else if (grade.equals("大四")) {
-                studentId = "2021" + String.format("%04d", random.nextInt(studentNum) + 1);
-            }
-
+//            String studentId = "";
+//            if (grade.equals("大一")) {
+//                studentId = "2024" + String.format("%04d", random.nextInt(studentNum) + 1);
+//            } else if (grade.equals("大二")) {
+//                studentId = "2023" + String.format("%04d", random.nextInt(studentNum) + 1);
+//            } else if (grade.equals("大三")) {
+//                studentId = "2022" + String.format("%04d", random.nextInt(studentNum) + 1);
+//            } else if (grade.equals("大四")) {
+//                studentId = "2021" + String.format("%04d", random.nextInt(studentNum) + 1);
+//            }
+            String studentId="";
+            do {
+                if (grade.equals("大一")) {
+                    studentId = "2024" + String.format("%04d", random.nextInt(studentNum) + 1);
+                } else if (grade.equals("大二")) {
+                    studentId = "2023" + String.format("%04d", random.nextInt(studentNum) + 1);
+                } else if (grade.equals("大三")) {
+                    studentId = "2022" + String.format("%04d", random.nextInt(studentNum) + 1);
+                } else {
+                    studentId = "2021" + String.format("%04d", random.nextInt(studentNum) + 1);
+                }
+            } while (existingIds.contains(studentId));
+            existingIds.add(studentId);
 
             Student student = new Student(name, gender, age, studentId, grade);
 
@@ -85,7 +98,11 @@ public class InitializeData {
 
     //学生至少选三门课程，一个学生只能参加一个课程班级
     public static void studentChooseCourse(ArrayList<Student> students,ArrayList<Course> courses){
-        System.out.println("开始初始化学生选课信息，正在随机分配课程...");
+//        System.out.println("开始初始化学生选课信息，正在随机分配课程...");
+
+        for (Course course : courses) {
+            course.setStudent_num(0); // 重置课程人数
+        }
         for(Student student:students){
             int chooseCourseNum = random.nextInt(courses.size()-2)+3;  // 选课门数 3~courses.size()
             for (int i = 0; i < chooseCourseNum; i++) {
@@ -95,9 +112,13 @@ public class InitializeData {
                     i--;
                     continue;
                 }
-                course.setStudent_num(course.getStudent_num()+1);
+
+                course.setStudent_num(course.getStudent_num()+1);   // 课程人数加一，错误：当重复初始化时，会导致课程人数错误
+
                 student.getCourses().add(course);
+
             }
+
         }
 //        System.out.println("学生选课信息初始化完成，每个学生的选课列表：");
 //        for (Student student : students) {
@@ -115,96 +136,103 @@ public class InitializeData {
         // 根据课程学生数分配教师（教学班级）
         for (Course course : courses) {
             int studentNum = course.getStudent_num();
-            int maxCourseClassNum = studentNum / 20;  // 最大教学班数
+
+            int maxCourseClassNum = min(studentNum / 20,teachers.size());  // 最大教学班数
+
             ArrayList<Teacher> courseTeachers = new ArrayList<>();
 
             int teacherNum = random.nextInt(maxCourseClassNum-1) + 2;  // 教师数 2~maxCourseClassNum
+
             for (int i = 0; i < teacherNum; i++) {
-                Teacher teacher = teachers.get(random.nextInt(teachers.size()));
+                Teacher teacher = teachers.get(random.nextInt(teachers.size()));    // 随机选择一个教师
+
+                // 如果课程已经有这个老师，重新选取
                 if (courseTeachers.contains(teacher)) {
                     i--;
                     continue;
                 }
-                courseTeachers.add(teacher);
+
+                courseTeachers.add(teacher);    // 添加教师
             }
             course.setTeachers(courseTeachers);
         }
 //        System.out.println("课程教师信息初始化完成,每门课程的老师列表：");
 //        for (Course course : courses) {
+//            System.out.println(course.getTeachers().size());
+//        }
+//        for (Course course : courses) {
 //            System.out.println(course.getCourse_name() + " : " + course.getTeachers());
 //        }
     }
     //为教学班添加学生，每个学生至少3个课程，一个学生只能参加一个课程班级
+//
     public static void addCourseClassStudent(ArrayList<CourseClass> courseClasses, ArrayList<Student> students) {
-        System.out.println("开始初始化教学班学生信息，正在随机分配学生...");
+        int totalCount = 0;     // 记录当前分配到课程的学生人数
+        int classCount = 0;     // 记录当前课程班级数
+        ArrayList<Student> courseStudents = new ArrayList<>();  // 记录当前课程所有班级下的学生
 
-        int totalCount = 0;     //记录对应课程，当前分配的学生人数
-        int classCount = 0;     //记录当前课程，第几个教学班
-        // 根据学生所选课程分配教学班级
-        for (CourseClass courseClass:courseClasses) {
-            classCount+=1;
+        for (CourseClass courseClass : courseClasses) {
+            classCount += 1;
+            Course course = courseClass.getCourse();    // 获取对应课程
 
-            Course course = courseClass.getCourse();    // 获取教学班对应的课程
-            int classNum=course.getTeachers().size();   //获取教学班数
-            ArrayList<Student> courseStudents = courseClass.getStudents();  // 获取教学班的学生列表
-            int studentNum = course.getStudent_num();   // 获取该课程的学生总数
+            int classNum = course.getTeachers().size(); // 获取课程班级数
+            ArrayList<Student> courseClassStudents = courseClass.getStudents();  // 记录当前班级下的学生
+            int studentNum = course.getStudent_num();   // 获取课程的总学生人数
 
+            int minNum = max(20, studentNum / classNum);    // 每个班级的最小学生人数
+            int maxNum = studentNum - totalCount - (classNum - classCount) * minNum;    // 每个班级的最大学生人数
 
-
-            int minNum=max(20,studentNum/classNum);
-            int maxNum=studentNum-totalCount-(classNum-classCount)*minNum;
-            if(totalCount<studentNum){
-
-                int studentCount = random.nextInt(maxNum-minNum+1)+minNum; //
+            if (totalCount < studentNum) {
+                int studentCount = random.nextInt(maxNum - minNum + 1) + minNum;    // 随机生成每个班级的学生人数
                 totalCount += studentCount;
-                outerLoop:
+
+//                int retryLimit = 100; // 最大重试限制以避免死循环
+//                outerLoop:
                 for (int i = 0; i < studentCount; i++) {
-                    Student student = students.get(random.nextInt(students.size()));    // 随机选取一个学生
-                    // 如果该学生没选这门课
-                    if(!student.getCourses().contains(course)){
+//                    if (retryLimit-- <= 0) break; // 如果达到重试限制则跳出循环
+                    Student student = students.get(random.nextInt(students.size()));    // 随机选择一个学生
+
+                    // 如果学生的课程中没有这门课，重新选取
+                    if (!student.getCourses().contains(course)) {
                         i--;
+
                         continue;
                     }
-                    // 如果该教学班的学生列表中已经包含了这个学生，重新选取
+
+                    // 如果学生已经在这门课的其他班级，重新选取
                     if (courseStudents.contains(student)) {
                         i--;
+
                         continue;
                     }
-                    // 如果该学生已经选了其他教学班，重新选取
-                    for(CourseClass courseClass1:student.getCourseClasses()){
-                        if(courseClass1.getCourse().equals(course)){
-                            i--;
-                            continue outerLoop;
-                        }
-                    }
 
-                    courseStudents.add(student);
-                    student.getCourseClasses().add(courseClass);
-                    student.getCourseClassHashMap().put(course,courseClass);
+//                    // 如果学生已经在这门课的其他班级，重新选取
+//                    for (CourseClass courseClass1 : student.getCourseClasses()) {
+//                        if (courseClass1.getCourse().equals(course)) {
+//                            continue outerLoop;
+//                        }
+//                    }
+//                    System.out.println(i);
+
+                    courseStudents.add(student);        // 向记录整个课程班级添加学生
+                    courseClassStudents.add(student);   // 向记录当前班级添加学生
+                    student.getCourseClasses().add(courseClass);    // 为学生添加课程班级
+                    student.getCourseClassHashMap().put(course, courseClass);   // 为学生添加课程-班级映射
                 }
-                courseClass.setStudents(courseStudents);
-            }
-            // 如果当前是该课程的最后一个教学班，重置记录
-            if(classCount==classNum){
-                classCount=0;
-                totalCount=0;
-            }
+                courseClass.setStudents(courseClassStudents);    // 为课程班级设置学生
+                courseClass.setStudent_num(courseClassStudents.size());      // 设置课程班级的学生人数
 
+            }
+            if (classCount == classNum) {
+                classCount = 0;
+                totalCount = 0;
+                courseStudents.clear();
+            }
         }
-
-//        System.out.println("教学班学生信息初始化完成,每个教学班的学生列表：");
-//        int count=0;
-//        for (CourseClass courseClass:courseClasses){
-//            courseClass.setStudent_num(courseClass.getStudents().size());
-//            count+=courseClass.getStudents().size();
-//            System.out.println("总共有"+courseClass.getStudent_num()+"个学生");
-//            System.out.println(courseClass.getClass_id() + " : " + courseClass.getStudents());
-//        }
-//        System.out.println("总共有"+count+"个学生");
     }
-
     public static void createCourseClass(ArrayList<CourseClass> courseClasses, ArrayList<Course> courses) {
         System.out.println("开始初始化教学班信息，正在随机分配教师...");
+
         for(Course course:courses) {
             ArrayList<Teacher> teachers = course.getTeachers();
             int index=1;
@@ -215,10 +243,10 @@ public class InitializeData {
                 index++;
                 courseClasses.add(courseClass);
             }
-
         }
         // 为每个教学班随机分配学生
         addCourseClassStudent(courseClasses, DataManager.getStudents());
+
         System.out.println("教学班信息初始化完成，共" + courseClasses.size() + "个教学班");
 //        System.out.println(courseClasses);
         pressEnterToContinue();
@@ -255,6 +283,13 @@ public class InitializeData {
             if (input.equalsIgnoreCase("N")) {
                 return;
             }
+            if (!input.equalsIgnoreCase("Y") && !input.equalsIgnoreCase("N")) {
+                System.out.println("请输入正确的选项");
+                return;
+            }
+            if (input.equalsIgnoreCase("Y")) {
+                students.clear();
+            }
         }
         Scanner scanner = new Scanner(System.in);
         System.out.println("请输入学生人数：(不少于100人，默认150人)");
@@ -287,6 +322,13 @@ public class InitializeData {
             String input = scanner.nextLine();
             if (input.equalsIgnoreCase("N")) {
                 return;
+            }
+            if (!input.equalsIgnoreCase("Y") && !input.equalsIgnoreCase("N")) {
+                System.out.println("请输入正确的选项");
+                return;
+            }
+            if (input.equalsIgnoreCase("Y")) {
+                teachers.clear();
             }
         }
         Scanner scanner = new Scanner(System.in);
@@ -321,6 +363,13 @@ public class InitializeData {
             if (input.equalsIgnoreCase("N")) {
                 return;
             }
+            if (!input.equalsIgnoreCase("Y") && !input.equalsIgnoreCase("N")) {
+                System.out.println("请输入正确的选项");
+                return;
+            }
+            if (input.equalsIgnoreCase("Y")) {
+                courses.clear();
+            }
         }
         Scanner scanner = new Scanner(System.in);
         System.out.println("请输入课程门数：(不少于3门，最多25门，默认5门)");
@@ -346,25 +395,75 @@ public class InitializeData {
     }
 
     public static void InitCourseClassData(ArrayList<CourseClass> courseClasses) {
+
+        if (!courseClasses.isEmpty()) {
+            System.out.println("教学班已经初始化，是否重新初始化？（Y/N）");
+            Scanner scanner = new Scanner(System.in);
+            String input = scanner.nextLine();
+            if (input.equalsIgnoreCase("N")) {
+                return;
+            }
+            if (!input.equalsIgnoreCase("Y") && !input.equalsIgnoreCase("N")) {
+                System.out.println("请输入正确的选项");
+                return;
+            }
+            if (input.equalsIgnoreCase("Y")) {
+                courseClasses.clear();
+            }
+        }
+
         studentChooseCourse(DataManager.getStudents(),DataManager.getCourses());
         addCourseTeacher(DataManager.getCourses(), DataManager.getTeachers());
         createCourseClass(courseClasses, DataManager.getCourses());
 
     }
+    public static void InitDataDefault(){
+        if (!DataManager.getStudents().isEmpty() || !DataManager.getTeachers().isEmpty() || !DataManager.getCourses().isEmpty() || !DataManager.getCourseClasses().isEmpty()) {
+            System.out.println("数据已经初始化，是否重新初始化？（Y/N）");
+            Scanner scanner = new Scanner(System.in);
+            String input = scanner.nextLine();
+            if (input.equalsIgnoreCase("N")) {
+                return;
+            }
+            if (!input.equalsIgnoreCase("Y") && !input.equalsIgnoreCase("N")) {
+                System.out.println("请输入正确的选项");
+                return;
+            }
+            if (input.equalsIgnoreCase("Y")) {
+                DataManager.setStudents(new ArrayList<>());
+                DataManager.setTeachers(new ArrayList<>());
+                DataManager.setCourses(new ArrayList<>());
+                DataManager.setCourseClasses(new ArrayList<>());
+            }
 
-    public static void main(String[] args) {
-        InitStudentData(DataManager.getStudents());
-        InitTeacherData(DataManager.getTeachers());
-        InitCourseData(DataManager.getCourses());
-        InitCourseClassData(DataManager.getCourseClasses());
-
-//        for(Student student:DataManager.getStudents()){
-//            System.out.println(student+"学生对应班级"+student.getCourseClasses());
-//        }
-//
-//        System.out.println("teachers"+DataManager.getTeachers());
-//        System.out.println("courses"+DataManager.getCourses());
-//        System.out.println("courseClasses"+DataManager.getCourseClasses());
-
+//            if (!DataManager.getStudents().isEmpty() || !DataManager.getTeachers().isEmpty() || !DataManager.getCourses().isEmpty() || !DataManager.getCourseClasses().isEmpty()) {
+//                System.out.println("数据清除失败，请检查数据是否已经清除");
+//                return;
+//            }
+        }
+        createStudents(DataManager.getStudents(), 150);
+        createTeachers(DataManager.getTeachers(), 10);
+        createCourses(DataManager.getCourses(), 5);
+        studentChooseCourse(DataManager.getStudents(),DataManager.getCourses());
+        addCourseTeacher(DataManager.getCourses(), DataManager.getTeachers());
+        createCourseClass(DataManager.getCourseClasses(), DataManager.getCourses());
     }
+
+//    public static void main(String[] args) {
+////        InitStudentData(DataManager.getStudents());
+////        InitTeacherData(DataManager.getTeachers());
+////        InitCourseData(DataManager.getCourses());
+////        InitCourseClassData(DataManager.getCourseClasses());
+//
+//        InitDataDefault();
+//        InitDataDefault();
+////        for(Student student:DataManager.getStudents()){
+////            System.out.println(student+"学生对应班级"+student.getCourseClasses());
+////        }
+////
+////        System.out.println("teachers"+DataManager.getTeachers());
+////        System.out.println("courses"+DataManager.getCourses());
+////        System.out.println("courseClasses"+DataManager.getCourseClasses());
+//
+//    }
 }

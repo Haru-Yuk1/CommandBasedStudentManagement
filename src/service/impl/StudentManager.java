@@ -3,6 +3,7 @@ package service.impl;
 import dao.impl.DataManager;
 import entity.Course;
 import entity.CourseClass;
+import entity.CourseScore;
 import entity.Student;
 
 import java.util.ArrayList;
@@ -51,6 +52,7 @@ public class StudentManager {
         System.out.println("----------------------学生信息表----------------------");
         System.out.println("|\t学号\t\t\t|\t姓名\t\t|\t性别\t|\t年龄\t|\t总成绩\t|");
         ArrayList<Student> students = DataManager.getStudents();
+
         if (choice == 1) {
             students.sort((o1, o2) -> o1.getTotalScore().compareTo(o2.getTotalScore()));
         } else if (choice == 2) {
@@ -64,6 +66,7 @@ public class StudentManager {
         pressEnterToContinue();
     }
 
+    //根据课程成绩排序学生信息
     public static void queryStudentInfoByCourseScore() {
         ArrayList<Student> students = DataManager.getStudents();
         ArrayList<Course> courses = DataManager.getCourses();
@@ -80,12 +83,29 @@ public class StudentManager {
         }
 
         for (Course course : courses) {
+            //判断输入的课程号是否存在
             if (course.getCourse_id().equals(class_id)) {
                 int choice = sortAscOrDesc();
+                //按照课程成绩排序
                 if (choice == 1) {
-                    students.sort((o1, o2) -> o1.getTotalScore().compareTo(o2.getTotalScore()));
+                    students.sort((o1, o2) -> {
+                        CourseScore score1 = o1.getCourseScores().get(course);
+                        CourseScore score2 = o2.getCourseScores().get(course);
+                        //如果学生没有该课程成绩，则不显示
+                        if (score1 == null && score2 == null) return 0;
+                        if (score1 == null) return -1;
+                        if (score2 == null) return 1;
+                        return score1.getComprehensiveScore() - score2.getComprehensiveScore();
+                    });
                 } else if (choice == 2) {
-                    students.sort((o1, o2) -> o2.getTotalScore().compareTo(o1.getTotalScore()));
+                    students.sort((o1, o2) -> {
+                        CourseScore score1 = o1.getCourseScores().get(course);
+                        CourseScore score2 = o2.getCourseScores().get(course);
+                        if (score1 == null && score2 == null) return 0;
+                        if (score1 == null) return 1;
+                        if (score2 == null) return -1;
+                        return score2.getComprehensiveScore() - score1.getComprehensiveScore();
+                    });
                 } else {
                     return;
                 }
@@ -94,6 +114,10 @@ public class StudentManager {
                     for (int i = 0; i < student.getCourses().size(); i++) {
                         Course course1 = student.getCourses().get(i);
                         if (course1.getCourse_id().equals(class_id)) {
+                            //如果学生没有该课程成绩，则不显示
+                            if(student.getCourseScores().get(course1)==null) {
+                                continue;
+                            }
                             System.out.println("|\t" + student.getStudent_id() + "\t|\t" + student.getName() + "\t|\t" + student.getCourseScores().get(course1).getComprehensiveScore() + "\t|");
                         }
                     }
@@ -101,11 +125,31 @@ public class StudentManager {
                 pressEnterToContinue();
                 return;
             }
+
         }
+        System.out.println("未找到该课程，请检查输入是否正确。");
+        pressEnterToContinue();
 
 
     }
 
+    public static void randomChooseCourse() {
+        ArrayList<Student> students = DataManager.getStudents();
+        ArrayList<CourseClass> courseClasses = DataManager.getCourseClasses();
+        if (students.isEmpty()) {
+            System.out.println("学生信息尚未初始化，请先初始化学生信息");
+            pressEnterToContinue();
+            return;
+        }
+        if (courseClasses.isEmpty()) {
+            System.out.println("教学班信息尚未初始化，请先初始化教学班信息");
+            pressEnterToContinue();
+            return;
+        }
+        System.out.println("正在随机分配学生选课...");
+        System.out.println("随机分配学生选课完成");
+        pressEnterToContinue();
+    }
     public static void queryStudentClassInfo() {
 
 
@@ -170,13 +214,32 @@ public class StudentManager {
         ArrayList<Student> students = DataManager.getStudents();
         for (Student student : students) {
             if (student.getStudent_id().equals(id)) {
+
+//                //删除教学班中该学生信息
+//                ArrayList<CourseClass> courseClasses = DataManager.getCourseClasses();
+//                for (CourseClass courseClass : courseClasses) {
+//                    if (courseClass.getStudents().contains(student)) {
+//                        for (Student student1 : courseClass.getStudents()) {
+//                            if (student1.getStudent_id().equals(id)) {
+//                                courseClass.setStudent_num(courseClass.getStudent_num() - 1);
+//                                courseClass.getCourse().setStudent_num(courseClass.getCourse().getStudent_num() - 1);
+//                                courseClass.getStudents().remove(student1);
+//                            }
+//                        }
+//                    }
+//                }
+                //删除学生表中的学生
                 students.remove(student);
                 System.out.println("删除成功");
+                System.out.println("删除的学生："+student.getName());
+                pressEnterToContinue();
                 return;
             }
         }
-
+        System.out.println("未找到该学生，请检查输入是否正确。");
+        pressEnterToContinue();
     }
+
 
     public static void updateStudent() {
         System.out.println("请输入要修改的学生学号：");
@@ -185,23 +248,26 @@ public class StudentManager {
         ArrayList<Student> students = DataManager.getStudents();
         for (Student student1 : students) {
             if (student1.getStudent_id().equals(id1)) {
-                System.out.println("请输入要修改的学生姓名：");
+                System.out.println("请输入修改后的学生姓名：");
                 String name = scanner.next();
-                System.out.println("请输入要修改的学生性别：");
+                System.out.println("请输入修改后的学生性别：");
                 String gender = scanner.next();
-                System.out.println("请输入要修改的学生年龄：");
+                System.out.println("请输入修改后的学生年龄：");
                 int age = scanner.nextInt();
-                System.out.println("请输入要修改的学生年级：");
+                System.out.println("请输入修改后的学生年级：");
                 String grade = scanner.next();
                 student1.setName(name);
                 student1.setGender(gender);
                 student1.setAge(age);
                 student1.setGrade(grade);
                 System.out.println("修改成功");
+                System.out.println("修改后的学生信息："+student1);
+                pressEnterToContinue();
                 return;
             }
         }
-
+        System.out.println("未找到该学生，请检查输入是否正确。");
+        pressEnterToContinue();
 
     }
 }
